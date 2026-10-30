@@ -1,15 +1,19 @@
 using Scalar.AspNetCore;
+using WebApplication3.Middleware;
 using WebApplication3.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+// Create an explicit alias for ASP.NET Core's WebApplication class
+using WebApp = Microsoft.AspNetCore.Builder.WebApplication;
+
+var builder = WebApp.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton<IStudentService, StudentService>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -21,9 +25,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
+app.UseExceptionHandler();
 app.MapControllers();
 
 app.Run();
