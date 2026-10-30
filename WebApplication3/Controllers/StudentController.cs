@@ -9,9 +9,9 @@ namespace WebApplication3.Controllers;
 [Route("api/students")]
 public class StudentController : ControllerBase
 {
-    private readonly StudentService _studentService;
+    private readonly IStudentService _studentService;
 
-    public StudentController(StudentService studentService)
+    public StudentController(IStudentService studentService)
     {
         _studentService = studentService;
     }

@@ -1,12 +1,11 @@
 ﻿using System.Xml.Linq;
 using WebApplication3.Models;
 
-namespace WebApplication3.Services
-{
+namespace WebApplication3.Services;
 
-    public class StudentService
-    {
-        private readonly List<Student> _students = new()
+public class StudentService : IStudentService
+{
+    private readonly List<Student> _students = new()
     {
         new Student
         {
@@ -24,56 +23,55 @@ namespace WebApplication3.Services
         }
     };
 
-        private int _nextId = 3;
+    private int _nextId = 3;
 
-        // GET: Retrieve all students
-        public List<Student> GetAllStudents()
-        {
-            return _students;
-        }
+    // GET: Retrieve all students
+    public List<Student> GetAllStudents()
+    {
+        return _students;
+    }
 
-        // GET: Retrieve student by ID
-        public Student? GetStudentById(int id)
-        {
-            return _students.FirstOrDefault(s => s.Id == id);
-        }
+    // GET: Retrieve student by ID
+    public Student? GetStudentById(int id)
+    {
+        return _students.FirstOrDefault(s => s.Id == id);
+    }
 
-        // POST: Add a student
-        public Student AddStudent(Student student)
-        {
-            student.Id = _nextId++;
+    // POST: Add a student
+    public Student AddStudent(Student student)
+    {
+        student.Id = _nextId++;
 
-            _students.Add(student);
+        _students.Add(student);
 
-            return student;
-        }
+        return student;
+    }
 
-        // PUT: Update a student
-        public Student? UpdateStudent(int id, Student updatedStudent)
-        {
-            var existingStudent = GetStudentById(id);
+    // PUT: Update a student
+    public Student? UpdateStudent(int id, Student updatedStudent)
+    {
+        var existingStudent = GetStudentById(id);
 
-            if (existingStudent == null)
-                return null;
+        if (existingStudent == null)
+            return null;
 
-            existingStudent.Name = updatedStudent.Name;
-            existingStudent.Email = updatedStudent.Email;
-            existingStudent.Age = updatedStudent.Age;
+        existingStudent.Name = updatedStudent.Name;
+        existingStudent.Email = updatedStudent.Email;
+        existingStudent.Age = updatedStudent.Age;
 
-            return existingStudent;
-        }
+        return existingStudent;
+    }
 
-        // DELETE: Delete a student
-        public bool DeleteStudent(int id)
-        {
-            var student = GetStudentById(id);
+    // DELETE: Delete a student
+    public bool DeleteStudent(int id)
+    {
+        var student = GetStudentById(id);
 
-            if (student == null)
-                return false;
+        if (student == null)
+            return false;
 
-            _students.Remove(student);
+        _students.Remove(student);
 
-            return true;
-        }
+        return true;
     }
 }
