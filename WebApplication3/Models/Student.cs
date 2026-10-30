@@ -9,4 +9,10 @@ public class Student
     public string Email { get; set; } = string.Empty;
 
     public int Age { get; set; }
+
+    // Foreign key
+    public int? DepartmentId { get; set; }
+
+    // Navigation property
+    public Department? Department { get; set; }
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using WebApplication3.DTOs;
+﻿using WebApplication3.DTOs;
 using WebApplication3.Models;
 using WebApplication3.Repositories;
 
@@ -7,81 +6,88 @@ namespace WebApplication3.Services;
 
 public class StudentService : IStudentService
 {
-    private readonly IStudentRepository _repository;
-    private readonly ILogger<StudentService> _logger;
+    private readonly IStudentRepository _studentRepository;
 
-    public StudentService(
-        IStudentRepository repository,
-        ILogger<StudentService> logger)
+    public StudentService(IStudentRepository studentRepository)
     {
-        _repository = repository;
-        _logger = logger;
+        _studentRepository = studentRepository;
     }
 
     public async Task<List<StudentDto>> GetAllStudentsAsync()
     {
-        var students = await _repository.GetAllAsync();
+        var students = await _studentRepository.GetAllAsync();
         return students.Select(MapToDto).ToList();
     }
 
     public async Task<StudentDto?> GetStudentByIdAsync(int id)
     {
-        var student = await _repository.GetByIdAsync(id);
-        if (student is null) return null;
-
-        return MapToDto(student);
+        var student = await _studentRepository.GetByIdAsync(id);
+        return student == null ? null : MapToDto(student);
     }
 
-    public async Task<StudentDto> AddStudentAsync(CreateStudentDto studentDto)
+    public async Task<StudentDto> CreateStudentAsync(CreateStudentDto createDto)
     {
-        _logger.LogInformation("Adding student with email {Email}", studentDto.Email);
+        if (await _studentRepository.EmailExistsAsync(createDto.Email))
+        {
+            throw new ArgumentException("A student with this email already exists.");
+        }
+
+        if (createDto.Age < 17 || createDto.Age > 60)
+        {
+            throw new ArgumentException("Age must be between 17 and 60.");
+        }
 
         var student = new Student
         {
-            Name = studentDto.Name,
-            Email = studentDto.Email,
-            Age = studentDto.Age
+            Name = createDto.Name,
+            Email = createDto.Email,
+            Age = createDto.Age,
+            DepartmentId = createDto.DepartmentId
         };
 
-        await _repository.AddAsync(student);
+        await _studentRepository.AddAsync(student);
 
-        _logger.LogInformation(
-            "Student created successfully with ID {StudentId}",
-            student.Id);
-
-        return MapToDto(student);
+        var created = await _studentRepository.GetByIdAsync(student.Id);
+        return MapToDto(created ?? student);
     }
 
-    public async Task<StudentDto?> UpdateStudentAsync(
-        int id,
-        UpdateStudentDto studentDto)
+    public async Task<bool> UpdateStudentAsync(int id, UpdateStudentDto updateDto)
     {
-        var student = await _repository.GetByIdAsync(id);
-        if (student is null) return null;
+        var existingStudent = await _studentRepository.GetByIdAsync(id);
+        if (existingStudent == null)
+        {
+            return false;
+        }
 
-        student.Name = studentDto.Name;
-        student.Email = studentDto.Email;
-        student.Age = studentDto.Age;
+        if (await _studentRepository.EmailExistsAsync(updateDto.Email, id))
+        {
+            throw new ArgumentException("Another student with this email already exists.");
+        }
 
-        await _repository.UpdateAsync(student);
+        if (updateDto.Age < 17 || updateDto.Age > 60)
+        {
+            throw new ArgumentException("Age must be between 17 and 60.");
+        }
 
-        return MapToDto(student);
+        existingStudent.Name = updateDto.Name;
+        existingStudent.Email = updateDto.Email;
+        existingStudent.Age = updateDto.Age;
+        existingStudent.DepartmentId = updateDto.DepartmentId;
+
+        await _studentRepository.UpdateAsync(existingStudent);
+        return true;
     }
 
     public async Task<bool> DeleteStudentAsync(int id)
     {
-        var student = await _repository.GetByIdAsync(id);
-        if (student is null) return false;
+        var student = await _studentRepository.GetByIdAsync(id);
+        if (student == null)
+        {
+            return false;
+        }
 
-        await _repository.DeleteAsync(student);
+        await _studentRepository.DeleteAsync(student);
         return true;
-    }
-
-    public Task<bool> EmailExistsAsync(
-        string email,
-        int? excludeStudentId = null)
-    {
-        return _repository.EmailExistsAsync(email, excludeStudentId);
     }
 
     private static StudentDto MapToDto(Student student)
@@ -91,7 +97,8 @@ public class StudentService : IStudentService
             Id = student.Id,
             Name = student.Name,
             Email = student.Email,
-            Age = student.Age
+            Age = student.Age,
+            DepartmentName = student.Department?.DepartmentName
         };
     }
 }

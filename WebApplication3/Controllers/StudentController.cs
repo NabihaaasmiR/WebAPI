@@ -15,7 +15,6 @@ public class StudentsController : ControllerBase
         _studentService = studentService;
     }
 
-    // GET: api/students
     [HttpGet]
     public async Task<ActionResult<List<StudentDto>>> GetAllStudents()
     {
@@ -23,82 +22,57 @@ public class StudentsController : ControllerBase
         return Ok(students);
     }
 
-    // GET: api/students/5
     [HttpGet("{id}")]
     public async Task<ActionResult<StudentDto>> GetStudentById(int id)
     {
-        if (id <= 0)
-        {
-            return BadRequest(new { message = "Student ID must be greater than zero." });
-        }
-
         var student = await _studentService.GetStudentByIdAsync(id);
-
-        if (student is null)
+        if (student == null)
         {
-            return NotFound(new { message = "Student not found." });
+            return NotFound();
         }
-
         return Ok(student);
     }
 
-    // POST: api/students
     [HttpPost]
-    public async Task<ActionResult<StudentDto>> AddStudent(CreateStudentDto studentDto)
+    public async Task<ActionResult<StudentDto>> CreateStudent([FromBody] CreateStudentDto createDto)
     {
-        if (await _studentService.EmailExistsAsync(studentDto.Email))
+        try
         {
-            return Conflict(new { message = "A student with this email already exists." });
+            var createdStudent = await _studentService.CreateStudentAsync(createDto);
+            return CreatedAtAction(nameof(GetStudentById), new { id = createdStudent.Id }, createdStudent);
         }
-
-        var createdStudent = await _studentService.AddStudentAsync(studentDto);
-
-        return CreatedAtAction(
-            nameof(GetStudentById),
-            new { id = createdStudent.Id },
-            createdStudent);
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    // PUT: api/students/5
     [HttpPut("{id}")]
-    public async Task<ActionResult<StudentDto>> UpdateStudent(int id, UpdateStudentDto studentDto)
+    public async Task<IActionResult> UpdateStudent(int id, [FromBody] UpdateStudentDto updateDto)
     {
-        if (id <= 0)
+        try
         {
-            return BadRequest(new { message = "Student ID must be greater than zero." });
+            var updated = await _studentService.UpdateStudentAsync(id, updateDto);
+            if (!updated)
+            {
+                return NotFound();
+            }
+            return NoContent();
         }
-
-        if (await _studentService.EmailExistsAsync(studentDto.Email, id))
+        catch (ArgumentException ex)
         {
-            return Conflict(new { message = "Another student with this email already exists." });
+            return BadRequest(new { message = ex.Message });
         }
-
-        var updatedStudent = await _studentService.UpdateStudentAsync(id, studentDto);
-
-        if (updatedStudent is null)
-        {
-            return NotFound(new { message = "Student not found." });
-        }
-
-        return Ok(updatedStudent);
     }
 
-    // DELETE: api/students/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteStudent(int id)
     {
-        if (id <= 0)
-        {
-            return BadRequest(new { message = "Student ID must be greater than zero." });
-        }
-
         var deleted = await _studentService.DeleteStudentAsync(id);
-
         if (!deleted)
         {
-            return NotFound(new { message = "Student not found." });
+            return NotFound();
         }
-
         return NoContent();
     }
 }
