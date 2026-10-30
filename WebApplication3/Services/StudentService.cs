@@ -1,9 +1,18 @@
-﻿using WebApplication3.Models;
+﻿using Microsoft.Extensions.Logging;
+using WebApplication3.Models;
+using WebApplication3.DTOs; // Keep if needed for CreateStudentDto/UpdateStudentDto if parameters need them, but methods use Domain models
 
 namespace WebApplication3.Services;
 
 public class StudentService : IStudentService
 {
+    private readonly ILogger<StudentService> _logger;
+
+    public StudentService(ILogger<StudentService> logger)
+    {
+        _logger = logger;
+    }
+
     private readonly List<Student> _students = new()
     {
         new Student { Id = 1, Name = "Arun", Email = "arun@example.com", Age = 21 },
@@ -12,14 +21,25 @@ public class StudentService : IStudentService
 
     private int _nextId = 3;
 
-    public List<Student> GetAllStudents() => _students;
+    public List<Student> GetAllStudents()
+    {
+        return _students;
+    }
 
-    public Student? GetStudentById(int id) => _students.FirstOrDefault(s => s.Id == id);
+    public Student? GetStudentById(int id)
+    {
+        return _students.FirstOrDefault(s => s.Id == id);
+    }
 
     public Student AddStudent(Student student)
     {
+        _logger.LogInformation("Adding student with email {Email}", student.Email);
+
         student.Id = _nextId++;
         _students.Add(student);
+
+        _logger.LogInformation("Student created successfully with ID {StudentId}", student.Id);
+
         return student;
     }
 
