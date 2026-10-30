@@ -18,26 +18,43 @@ public class StudentController : ControllerBase
 
     // GET: api/students
     [HttpGet]
-    public ActionResult<List<Student>> GetAllStudents()
+    public ActionResult<List<StudentDto>> GetAllStudents()
     {
-        return Ok(_studentService.GetAllStudents());
+        var students = _studentService.GetAllStudents();
+        var studentDtos = students.Select(s => new StudentDto
+        {
+            Id = s.Id,
+            Name = s.Name,
+            Email = s.Email,
+            Age = s.Age
+        }).ToList();
+
+        return Ok(studentDtos);
     }
 
     // GET: api/students/1
     [HttpGet("{id}")]
-    public ActionResult<Student> GetStudentById(int id)
+    public ActionResult<StudentDto> GetStudentById(int id)
     {
         var student = _studentService.GetStudentById(id);
 
         if (student == null)
             return NotFound(new { message = "Student not found." });
 
-        return Ok(student);
+        var studentDto = new StudentDto
+        {
+            Id = student.Id,
+            Name = student.Name,
+            Email = student.Email,
+            Age = student.Age
+        };
+
+        return Ok(studentDto);
     }
 
     // POST: api/students
     [HttpPost]
-    public ActionResult<Student> AddStudent(CreateStudentDto studentDto)
+    public ActionResult<StudentDto> AddStudent(CreateStudentDto studentDto)
     {
         var student = new Student
         {
@@ -48,22 +65,45 @@ public class StudentController : ControllerBase
 
         var createdStudent = _studentService.AddStudent(student);
 
+        var responseDto = new StudentDto
+        {
+            Id = createdStudent.Id,
+            Name = createdStudent.Name,
+            Email = createdStudent.Email,
+            Age = createdStudent.Age
+        };
+
         return CreatedAtAction(
             nameof(GetStudentById),
-            new { id = createdStudent.Id },
-            createdStudent);
+            new { id = responseDto.Id },
+            responseDto);
     }
 
     // PUT: api/students/1
     [HttpPut("{id}")]
-    public ActionResult<Student> UpdateStudent(int id, Student updatedStudent)
+    public ActionResult<StudentDto> UpdateStudent(int id, UpdateStudentDto studentDto)
     {
+        var updatedStudent = new Student
+        {
+            Name = studentDto.Name,
+            Email = studentDto.Email,
+            Age = studentDto.Age
+        };
+
         var student = _studentService.UpdateStudent(id, updatedStudent);
 
         if (student == null)
             return NotFound(new { message = "Student not found." });
 
-        return Ok(student);
+        var responseDto = new StudentDto
+        {
+            Id = student.Id,
+            Name = student.Name,
+            Email = student.Email,
+            Age = student.Age
+        };
+
+        return Ok(responseDto);
     }
 
     // DELETE: api/students/1
