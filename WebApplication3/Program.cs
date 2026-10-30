@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using WebApplication3.Data;
 using WebApplication3.Middleware;
+using WebApplication3.Repositories;
 using WebApplication3.Services;
 
 // Create an explicit alias for ASP.NET Core's WebApplication class
@@ -17,7 +18,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddSingleton<IStudentService, StudentService>();
+// Register Repositories and Services with Scoped lifetime
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 

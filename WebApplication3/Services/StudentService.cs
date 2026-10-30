@@ -1,73 +1,97 @@
 ﻿using Microsoft.Extensions.Logging;
+using WebApplication3.DTOs;
 using WebApplication3.Models;
-using WebApplication3.DTOs; // Keep if needed for CreateStudentDto/UpdateStudentDto if parameters need them, but methods use Domain models
+using WebApplication3.Repositories;
 
 namespace WebApplication3.Services;
 
 public class StudentService : IStudentService
 {
+    private readonly IStudentRepository _repository;
     private readonly ILogger<StudentService> _logger;
 
-    public StudentService(ILogger<StudentService> logger)
+    public StudentService(
+        IStudentRepository repository,
+        ILogger<StudentService> logger)
     {
+        _repository = repository;
         _logger = logger;
     }
 
-    private readonly List<Student> _students = new()
+    public async Task<List<StudentDto>> GetAllStudentsAsync()
     {
-        new Student { Id = 1, Name = "Arun", Email = "arun@example.com", Age = 21 },
-        new Student { Id = 2, Name = "Priya", Email = "priya@example.com", Age = 22 }
-    };
-
-    private int _nextId = 3;
-
-    public List<Student> GetAllStudents()
-    {
-        return _students;
+        var students = await _repository.GetAllAsync();
+        return students.Select(MapToDto).ToList();
     }
 
-    public Student? GetStudentById(int id)
+    public async Task<StudentDto?> GetStudentByIdAsync(int id)
     {
-        return _students.FirstOrDefault(s => s.Id == id);
+        var student = await _repository.GetByIdAsync(id);
+        if (student is null) return null;
+
+        return MapToDto(student);
     }
 
-    public Student AddStudent(Student student)
+    public async Task<StudentDto> AddStudentAsync(CreateStudentDto studentDto)
     {
-        _logger.LogInformation("Adding student with email {Email}", student.Email);
+        _logger.LogInformation("Adding student with email {Email}", studentDto.Email);
 
-        student.Id = _nextId++;
-        _students.Add(student);
+        var student = new Student
+        {
+            Name = studentDto.Name,
+            Email = studentDto.Email,
+            Age = studentDto.Age
+        };
 
-        _logger.LogInformation("Student created successfully with ID {StudentId}", student.Id);
+        await _repository.AddAsync(student);
 
-        return student;
+        _logger.LogInformation(
+            "Student created successfully with ID {StudentId}",
+            student.Id);
+
+        return MapToDto(student);
     }
 
-    public Student? UpdateStudent(int id, Student updatedStudent)
+    public async Task<StudentDto?> UpdateStudentAsync(
+        int id,
+        UpdateStudentDto studentDto)
     {
-        var student = GetStudentById(id);
-        if (student == null) return null;
+        var student = await _repository.GetByIdAsync(id);
+        if (student is null) return null;
 
-        student.Name = updatedStudent.Name;
-        student.Email = updatedStudent.Email;
-        student.Age = updatedStudent.Age;
+        student.Name = studentDto.Name;
+        student.Email = studentDto.Email;
+        student.Age = studentDto.Age;
 
-        return student;
+        await _repository.UpdateAsync(student);
+
+        return MapToDto(student);
     }
 
-    public bool DeleteStudent(int id)
+    public async Task<bool> DeleteStudentAsync(int id)
     {
-        var student = GetStudentById(id);
-        if (student == null) return false;
+        var student = await _repository.GetByIdAsync(id);
+        if (student is null) return false;
 
-        _students.Remove(student);
+        await _repository.DeleteAsync(student);
         return true;
     }
 
-    public bool EmailExists(string email, int? excludeStudentId = null)
+    public Task<bool> EmailExistsAsync(
+        string email,
+        int? excludeStudentId = null)
     {
-        return _students.Any(s =>
-            s.Email.Equals(email, StringComparison.OrdinalIgnoreCase)
-            && (!excludeStudentId.HasValue || s.Id != excludeStudentId.Value));
+        return _repository.EmailExistsAsync(email, excludeStudentId);
+    }
+
+    private static StudentDto MapToDto(Student student)
+    {
+        return new StudentDto
+        {
+            Id = student.Id,
+            Name = student.Name,
+            Email = student.Email,
+            Age = student.Age
+        };
     }
 }
