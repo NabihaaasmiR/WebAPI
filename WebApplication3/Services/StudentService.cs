@@ -1,4 +1,5 @@
-﻿using WebApplication3.Models;
+﻿using WebApplication3.DTOs;
+using WebApplication3.Models;
 
 namespace WebApplication3.Services;
 
@@ -12,35 +13,83 @@ public class StudentService : IStudentService
 
     private int _nextId = 3;
 
-    public List<Student> GetAllStudents() => _students;
-
-    public Student? GetStudentById(int id) => _students.FirstOrDefault(s => s.Id == id);
-
-    public Student AddStudent(Student student)
+    public List<StudentDto> GetAllStudents()
     {
-        student.Id = _nextId++;
-        _students.Add(student);
-        return student;
+        return _students.Select(s => new StudentDto
+        {
+            Id = s.Id,
+            Name = s.Name,
+            Email = s.Email,
+            Age = s.Age
+        }).ToList();
     }
 
-    public Student? UpdateStudent(int id, Student updatedStudent)
+    public StudentDto? GetStudentById(int id)
     {
-        var student = GetStudentById(id);
+        var student = _students.FirstOrDefault(s => s.Id == id);
         if (student == null) return null;
 
-        student.Name = updatedStudent.Name;
-        student.Email = updatedStudent.Email;
-        student.Age = updatedStudent.Age;
+        return new StudentDto
+        {
+            Id = student.Id,
+            Name = student.Name,
+            Email = student.Email,
+            Age = student.Age
+        };
+    }
 
-        return student;
+    public StudentDto AddStudent(CreateStudentDto studentDto)
+    {
+        var student = new Student
+        {
+            Id = _nextId++,
+            Name = studentDto.Name,
+            Email = studentDto.Email,
+            Age = studentDto.Age
+        };
+
+        _students.Add(student);
+
+        return new StudentDto
+        {
+            Id = student.Id,
+            Name = student.Name,
+            Email = student.Email,
+            Age = student.Age
+        };
+    }
+
+    public StudentDto? UpdateStudent(int id, UpdateStudentDto studentDto)
+    {
+        var student = _students.FirstOrDefault(s => s.Id == id);
+        if (student == null) return null;
+
+        student.Name = studentDto.Name;
+        student.Email = studentDto.Email;
+        student.Age = studentDto.Age;
+
+        return new StudentDto
+        {
+            Id = student.Id,
+            Name = student.Name,
+            Email = student.Email,
+            Age = student.Age
+        };
     }
 
     public bool DeleteStudent(int id)
     {
-        var student = GetStudentById(id);
+        var student = _students.FirstOrDefault(s => s.Id == id);
         if (student == null) return false;
 
         _students.Remove(student);
         return true;
+    }
+
+    public bool EmailExists(string email, int? excludeStudentId = null)
+    {
+        return _students.Any(s =>
+            s.Email.Equals(email, StringComparison.OrdinalIgnoreCase)
+            && (!excludeStudentId.HasValue || s.Id != excludeStudentId.Value));
     }
 }
