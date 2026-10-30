@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using WebApplication3.Data;
 using WebApplication3.Middleware;
 using WebApplication3.Services;
 
@@ -11,6 +13,10 @@ var builder = WebApp.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// Register Entity Framework Core with SQL Server
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddSingleton<IStudentService, StudentService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -18,7 +24,6 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-// Exception handler should be near the top to catch errors from the entire pipeline
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())

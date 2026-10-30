@@ -1,8 +1,18 @@
-﻿namespace WebApplication3.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class CreateStudentDto
+namespace WebApplication3.DTOs
 {
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public int Age { get; set; }
+    public class CreateStudentDto
+    {
+        [Required]
+        [StringLength(100, MinimumLength = 2)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Range(19, 30)]
+        public int Age { get; set; }
+    }
 }
