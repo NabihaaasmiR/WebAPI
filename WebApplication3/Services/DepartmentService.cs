@@ -113,4 +113,32 @@ public class DepartmentService : IDepartmentService
 
         return DepartmentDeleteResult.Deleted;
     }
+
+    public async Task<PagedResult<DepartmentDto>> GetFilteredAndPagedDepartmentsAsync(
+        string? search,
+        int pageNumber,
+        int pageSize)
+    {
+        var departments = await _repository.GetFilteredAndPagedAsync(
+            search,
+            pageNumber,
+            pageSize);
+
+        var totalCount = await _repository.GetFilteredCountAsync(search);
+
+        var departmentDtos = departments.Select(d => new DepartmentDto
+        {
+            DepartmentId = d.DepartmentId,
+            DepartmentName = d.DepartmentName,
+            StudentCount = d.Students.Count
+        }).ToList();
+
+        return new PagedResult<DepartmentDto>
+        {
+            Items = departmentDtos,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
 }

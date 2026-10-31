@@ -13,6 +13,11 @@ public interface IDepartmentService
     Task<DepartmentDto?> UpdateDepartmentAsync(int id, CreateDepartmentDto dto);
 
     Task<DepartmentDeleteResult> DeleteDepartmentAsync(int id);
+
+    Task<PagedResult<DepartmentDto>> GetFilteredAndPagedDepartmentsAsync(
+        string? search,
+        int pageNumber,
+        int pageSize);
 }
 
 public enum DepartmentDeleteResult

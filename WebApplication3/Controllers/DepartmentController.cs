@@ -16,9 +16,32 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllDepartments()
+    public async Task<IActionResult> GetAllDepartments(
+        [FromQuery] string? search,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var departments = await _departmentService.GetAllDepartmentsAsync();
+        if (pageNumber < 1)
+        {
+            return BadRequest(new
+            {
+                message = "Page number must be greater than or equal to 1."
+            });
+        }
+
+        if (pageSize < 1 || pageSize > 100)
+        {
+            return BadRequest(new
+            {
+                message = "Page size must be between 1 and 100."
+            });
+        }
+
+        var departments =
+            await _departmentService.GetFilteredAndPagedDepartmentsAsync(
+                search,
+                pageNumber,
+                pageSize);
 
         return Ok(departments);
     }
