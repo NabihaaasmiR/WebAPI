@@ -100,6 +100,13 @@ public class StudentService : IStudentService
         return students.Select(MapToDto).ToList();
     }
 
+    public async Task<List<StudentDto>> GetStudentsByDepartmentIdAsync(int departmentId)
+    {
+        var students = await _repository.GetByDepartmentIdAsync(departmentId);
+
+        return students.Select(MapToDto).ToList();
+    }
+
     private static StudentDto MapToDto(Student student)
     {
         return new StudentDto
