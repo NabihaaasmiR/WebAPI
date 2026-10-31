@@ -5,7 +5,8 @@ namespace WebApplication3.Data;
 
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
@@ -52,8 +53,7 @@ public class ApplicationDbContext : DbContext
 
             entity.HasMany(d => d.Students)
                 .WithOne(s => s.Department)
-                .HasForeignKey(s => s.DepartmentId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasForeignKey(s => s.DepartmentId);
         });
     }
 }

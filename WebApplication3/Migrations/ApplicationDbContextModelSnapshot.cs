@@ -83,8 +83,7 @@ namespace WebApplication3.Migrations
                 {
                     b.HasOne("WebApplication3.Models.Department", "Department")
                         .WithMany("Students")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("DepartmentId");
 
                     b.Navigation("Department");
                 });

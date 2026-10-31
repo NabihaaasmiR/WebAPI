@@ -27,15 +27,13 @@ public class StudentRepository : IStudentRepository
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
-    public async Task<bool> EmailExistsAsync(string email, int? excludeStudentId = null)
+    public async Task<bool> EmailExistsAsync(
+        string email,
+        int? excludeStudentId = null)
     {
-        if (excludeStudentId.HasValue)
-        {
-            return await _context.Students
-                .AnyAsync(s => s.Email == email && s.Id != excludeStudentId.Value);
-        }
-        return await _context.Students
-            .AnyAsync(s => s.Email == email);
+        return await _context.Students.AnyAsync(s =>
+            s.Email == email &&
+            s.Id != excludeStudentId);
     }
 
     public async Task AddAsync(Student student)

@@ -5,22 +5,21 @@ using WebApplication3.Middleware;
 using WebApplication3.Repositories;
 using WebApplication3.Services;
 
-// Create an explicit alias for ASP.NET Core's WebApplication class
-using WebApp = Microsoft.AspNetCore.Builder.WebApplication;
-
-var builder = WebApp.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// Register Entity Framework Core with SQL Server
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register Repositories and Services with Scoped lifetime
-builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -28,13 +27,13 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseExceptionHandler();
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 
