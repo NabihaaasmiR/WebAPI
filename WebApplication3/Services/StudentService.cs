@@ -21,14 +21,7 @@ public class StudentService : IStudentService
     {
         var students = await _repository.GetAllAsync();
 
-        return students.Select(s => new StudentDto
-        {
-            Id = s.Id,
-            Name = s.Name,
-            Email = s.Email,
-            Age = s.Age,
-            DepartmentName = s.Department?.DepartmentName
-        }).ToList();
+        return students.Select(MapToDto).ToList();
     }
 
     public async Task<StudentDto?> GetStudentByIdAsync(int id)
@@ -57,8 +50,6 @@ public class StudentService : IStudentService
             "Student created successfully with ID {StudentId}",
             student.Id);
 
-        // If you need the DepartmentName immediately after creation, 
-        // you can re-fetch with the repository to load the navigation property
         var createdStudent = await _repository.GetByIdAsync(student.Id);
         return MapToDto(createdStudent ?? student);
     }
@@ -79,7 +70,6 @@ public class StudentService : IStudentService
 
         await _repository.UpdateAsync(student);
 
-        // Re-fetch to ensure the updated Department navigation property is loaded
         var updatedStudent = await _repository.GetByIdAsync(id);
         return MapToDto(updatedStudent ?? student);
     }
@@ -101,6 +91,13 @@ public class StudentService : IStudentService
         int? excludeStudentId = null)
     {
         return _repository.EmailExistsAsync(email, excludeStudentId);
+    }
+
+    public async Task<List<StudentDto>> SearchStudentsByNameAsync(string search)
+    {
+        var students = await _repository.SearchByNameAsync(search);
+
+        return students.Select(MapToDto).ToList();
     }
 
     private static StudentDto MapToDto(Student student)

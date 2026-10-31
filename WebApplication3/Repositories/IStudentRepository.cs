@@ -17,4 +17,6 @@ public interface IStudentRepository
     Task UpdateAsync(Student student);
 
     Task DeleteAsync(Student student);
+
+    Task<List<Student>> SearchByNameAsync(string search);
 }
