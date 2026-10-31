@@ -20,17 +20,14 @@ public class StudentService : IStudentService
     public async Task<List<StudentDto>> GetAllStudentsAsync()
     {
         var students = await _repository.GetAllAsync();
-
         return students.Select(MapToDto).ToList();
     }
 
     public async Task<StudentDto?> GetStudentByIdAsync(int id)
     {
         var student = await _repository.GetByIdAsync(id);
-
         if (student is null)
             return null;
-
         return MapToDto(student);
     }
 
@@ -96,14 +93,12 @@ public class StudentService : IStudentService
     public async Task<List<StudentDto>> SearchStudentsByNameAsync(string search)
     {
         var students = await _repository.SearchByNameAsync(search);
-
         return students.Select(MapToDto).ToList();
     }
 
     public async Task<List<StudentDto>> GetStudentsByDepartmentIdAsync(int departmentId)
     {
         var students = await _repository.GetByDepartmentIdAsync(departmentId);
-
         return students.Select(MapToDto).ToList();
     }
 
@@ -119,6 +114,37 @@ public class StudentService : IStudentService
 
         var students = await _repository.GetPagedAsync(pageNumber, pageSize);
         var totalCount = await _repository.GetTotalCountAsync();
+
+        var studentDtos = students.Select(MapToDto).ToList();
+
+        return new PagedResult<StudentDto>
+        {
+            Items = studentDtos,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    public async Task<PagedResult<StudentDto>> GetFilteredAndPagedStudentsAsync(
+        string? search,
+        int? departmentId,
+        string? sortBy,
+        string? sortOrder,
+        int pageNumber,
+        int pageSize)
+    {
+        var students = await _repository.GetFilteredAndPagedAsync(
+            search,
+            departmentId,
+            sortBy ?? "id",
+            sortOrder ?? "asc",
+            pageNumber,
+            pageSize);
+
+        var totalCount = await _repository.GetFilteredCountAsync(
+            search,
+            departmentId);
 
         var studentDtos = students.Select(MapToDto).ToList();
 

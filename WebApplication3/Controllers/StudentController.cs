@@ -20,10 +20,49 @@ public class StudentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<StudentDto>>> GetAllStudents()
+    public async Task<ActionResult<PagedResult<StudentDto>>> GetStudents(
+        [FromQuery] string? search = null,
+        [FromQuery] int? departmentId = null,
+        [FromQuery] string? sortBy = "id",
+        [FromQuery] string? sortOrder = "asc",
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var students = await _studentService.GetAllStudentsAsync();
-        return Ok(students);
+        // Validate pagination
+        if (pageNumber < 1)
+            return BadRequest("Page number must be at least 1.");
+
+        if (pageSize < 1 || pageSize > 100)
+            return BadRequest("Page size must be between 1 and 100.");
+
+        // Normalize sorting parameters
+        sortBy = string.IsNullOrWhiteSpace(sortBy)
+            ? "id"
+            : sortBy.Trim().ToLower();
+
+        sortOrder = string.IsNullOrWhiteSpace(sortOrder)
+            ? "asc"
+            : sortOrder.Trim().ToLower();
+
+        // Validate sorting
+        if (sortBy != "id" && sortBy != "name" && sortBy != "age")
+            return BadRequest("sortBy must be id, name, or age.");
+
+        if (sortOrder != "asc" && sortOrder != "desc")
+            return BadRequest("sortOrder must be asc or desc.");
+
+        if (departmentId.HasValue && departmentId.Value < 1)
+            return BadRequest("Department ID must be greater than 0.");
+
+        var result = await _studentService.GetFilteredAndPagedStudentsAsync(
+            search,
+            departmentId,
+            sortBy,
+            sortOrder,
+            pageNumber,
+            pageSize);
+
+        return Ok(result);
     }
 
     [HttpGet("{id:int}")]
@@ -83,48 +122,5 @@ public class StudentsController : ControllerBase
             return NotFound();
 
         return NoContent();
-    }
-
-    [HttpGet("search")]
-    public async Task<ActionResult<List<StudentDto>>> SearchStudents(
-        [FromQuery] string key)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-            return BadRequest("Search term is required.");
-
-        var students = await _studentService.SearchStudentsByNameAsync(key);
-
-        return Ok(students);
-    }
-
-    [HttpGet("department")]
-    public async Task<ActionResult<List<StudentDto>>> GetStudentsByDepartment(
-        [FromQuery] int departmentId)
-    {
-        if (departmentId <= 0)
-            return BadRequest("Department ID must be greater than zero.");
-
-        var students = await _studentService
-            .GetStudentsByDepartmentIdAsync(departmentId);
-
-        return Ok(students);
-    }
-
-    [HttpGet("paged")]
-    public async Task<ActionResult<PagedResult<StudentDto>>> GetPagedStudents(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
-    {
-        if (pageNumber < 1)
-            return BadRequest("Page number must be at least 1.");
-
-        if (pageSize < 1 || pageSize > 100)
-            return BadRequest("Page size must be between 1 and 100.");
-
-        var result = await _studentService.GetPagedStudentsAsync(
-            pageNumber,
-            pageSize);
-
-        return Ok(result);
     }
 }
