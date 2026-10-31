@@ -107,6 +107,30 @@ public class StudentService : IStudentService
         return students.Select(MapToDto).ToList();
     }
 
+    public async Task<PagedResult<StudentDto>> GetPagedStudentsAsync(
+        int pageNumber,
+        int pageSize)
+    {
+        if (pageNumber < 1)
+            throw new ArgumentException("Page number must be at least 1.");
+
+        if (pageSize < 1 || pageSize > 100)
+            throw new ArgumentException("Page size must be between 1 and 100.");
+
+        var students = await _repository.GetPagedAsync(pageNumber, pageSize);
+        var totalCount = await _repository.GetTotalCountAsync();
+
+        var studentDtos = students.Select(MapToDto).ToList();
+
+        return new PagedResult<StudentDto>
+        {
+            Items = studentDtos,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
     private static StudentDto MapToDto(Student student)
     {
         return new StudentDto
